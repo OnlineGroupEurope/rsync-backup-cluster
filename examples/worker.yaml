@@ -1,0 +1,5 @@
+---
+database: 'redis://localhost:6379'
+queues:
+  - 'default'
+  - 'my_custom_queue'
