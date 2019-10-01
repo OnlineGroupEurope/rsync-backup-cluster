@@ -27,7 +27,8 @@ class ParentJob(object):
     def enqueue(self):
         q = jobs.job_destination.queue(self.destinations,
                                        timeout=-1,
-                                       queue=self.queue)
+                                       queue=self.queue,
+                                       result_ttl=172800)  # 48 hours
 
         return {
             'id': q._id,
@@ -88,7 +89,8 @@ class Job(object):
         q = jobs.job_backup.queue(self.data, timeout=-1,
                                   queue=self.queue,
                                   meta=meta,
-                                  depends_on=depends_on)
+                                  depends_on=depends_on,
+                                  result_ttl=172800)  # 48 hours
 
         return {
             'id': q._id,
