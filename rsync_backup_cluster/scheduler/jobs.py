@@ -18,6 +18,9 @@ from flask import Blueprint, jsonify, request, make_response
 from rsync_backup_cluster.rq import get_rq
 from rsync_backup_cluster.scheduler.schema import job_schema
 from rsync_backup_cluster.job_factory import JobFactory
+from rq.registry import FailedJobRegistry
+from rq.queue import Queue
+from rq import job as rq_job
 import six
 
 
@@ -34,8 +37,8 @@ def _create_queue_job_obj(job):
 
 
 def _get_queue(queue_name='default'):
-    rq = get_rq()
-    queue = rq.get_queue(name=queue_name)
+    rqc = get_rq()
+    queue = rqc.get_queue(name=queue_name)
     jobs = queue.get_jobs()
     result = []
     for job in jobs:
@@ -43,14 +46,52 @@ def _get_queue(queue_name='default'):
     return jsonify(result)
 
 
+def _create_failed_job_obj(j):
+    return {
+        'source': j.meta['source'],
+        'destination': j.meta['destination'],
+        'enqueued_at': j.enqueued_at,
+        'created_at': j.created_at,
+        'started_at': j.started_at,
+        'ended_at': j.ended_at,
+        'origin': j.origin,
+        'status': six.text_type(j._status),
+        'result': j._result,
+        'exc_info': j.exc_info
+    }
+
+
+def _get_failed_jobs(connection):
+    queues = Queue.all(connection=connection)
+    failed_jobs = []
+
+    for q in queues:
+        registry = FailedJobRegistry(q.name,
+                                     connection=connection)
+
+        job_ids = registry.get_job_ids()
+
+        for id in job_ids:
+            j = rq_job.Job.fetch(id, connection=connection)
+            failed_jobs.append(_create_failed_job_obj(j))
+
+    return failed_jobs
+
+
 @bp.route('/jobs/queue', methods=['GET'])
 def jobs_queue_get_default():
-    return _get_queue()
+    return jsonify(_get_queue())
 
 
 @bp.route('/jobs/queue/<string:queue_name>', methods=['GET'])
 def jobs_queue_get(queue_name):
-    return _get_queue(queue_name)
+    return jsonify(_get_queue(queue_name))
+
+
+@bp.route('/jobs/failed', methods=['GET'])
+def jobs_failed_get():
+    rqc = get_rq()
+    return jsonify(_get_failed_jobs(rqc.connection))
 
 
 @bp.route('/jobs', methods=['POST'])
