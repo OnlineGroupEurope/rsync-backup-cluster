@@ -16,20 +16,27 @@
 
 from flask import Blueprint, jsonify
 from rsync_backup_cluster.rq import get_rq
+from rq.registry import DeferredJobRegistry
 
 
 bp = Blueprint('queues', __name__)
 
 
-def all_workers(rq):
+def _all_workers(rq):
     from rq.worker import Worker
     return Worker.all(connection=rq.connection)
+
+
+def _get_deferred_count(rq, queue_name='default'):
+    reg = DeferredJobRegistry(queue_name,
+                              connection=rq.connection)
+    return reg.count
 
 
 @bp.route('/queues')
 def get():
     rq = get_rq()
-    workers = all_workers(rq)
+    workers = _all_workers(rq)
     result = []
     queues = {}
     for worker in workers:
@@ -43,5 +50,6 @@ def get():
     for q in queues:
         data = {'name': q}
         data.update(queues[q])
+        data['deferred'] = _get_deferred_count(rq, q)
         result.append(data)
     return jsonify(result)
