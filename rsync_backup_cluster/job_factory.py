@@ -64,9 +64,9 @@ class Job(object):
 
         for part in all_parts:
             part_path = os.path.join(previous_dest, part)
+            source_part = os.path.join(previous_src, part)
 
             if not os.path.isdir(part_path):
-                source_part = os.path.join(previous_src, part)
                 source_part_stat = os.stat(source_part)
 
                 new_dest_path = (part_path, source_part_stat.st_uid,
@@ -74,8 +74,7 @@ class Job(object):
                                  source_part_stat.st_mode)
                 destinations.append(new_dest_path)
 
-                previous_src = os.path.join(previous_src, part)
-
+            previous_src = source_part
             previous_dest = part_path
 
         return destinations
