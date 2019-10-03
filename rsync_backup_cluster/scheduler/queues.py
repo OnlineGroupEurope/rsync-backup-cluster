@@ -27,6 +27,11 @@ def _all_workers(rq):
     return Worker.all(connection=rq.connection)
 
 
+def _all_queues(rq):
+    from rq.queue import Queue
+    return Queue.all(connection=rq.connection)
+
+
 def _get_deferred_count(rq, queue_name='default'):
     reg = DeferredJobRegistry(queue_name,
                               connection=rq.connection)
@@ -47,6 +52,13 @@ def get():
                 }
             queues[queue.name]['workers'] += 1
             queues[queue.name]['count'] = queue.count
+    all = _all_queues(rq)
+    for a in all:
+        if a.name not in queues:
+            queues[a.name] = {
+                'count': a.count,
+                'workers': 0
+            }
     for q in queues:
         data = {'name': q}
         data.update(queues[q])
