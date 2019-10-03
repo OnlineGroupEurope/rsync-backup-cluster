@@ -55,7 +55,7 @@ def _create_failed_job_obj(j):
         'started_at': j.started_at,
         'ended_at': j.ended_at,
         'origin': j.origin,
-        'status': six.text_type(j._status),
+        'status': j._status.decode('utf8'),
         'result': j._result,
         'exc_info': j.exc_info
     }
