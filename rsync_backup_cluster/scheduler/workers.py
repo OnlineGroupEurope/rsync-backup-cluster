@@ -34,6 +34,8 @@ def create_worker_obj(worker):
     return {
         'name': six.text_type(worker.name),
         'state': six.text_type(worker.state),
+        'shutdown_requested_date': six.text_type(
+            worker.shutdown_requested_date),
         'failed_job_count': worker.failed_job_count,
         'successful_job_count': worker.successful_job_count,
         'queues': queues
