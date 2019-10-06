@@ -36,6 +36,7 @@ def create_worker_obj(worker):
         'state': six.text_type(worker.state),
         'shutdown_requested_date': six.text_type(
             worker.shutdown_requested_date),
+        'pid': worker.pid,
         'failed_job_count': worker.failed_job_count,
         'successful_job_count': worker.successful_job_count,
         'queues': queues
