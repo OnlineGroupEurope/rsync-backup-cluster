@@ -52,6 +52,14 @@ def get():
                 }
             queues[queue.name]['workers'] += 1
             queues[queue.name]['count'] = queue.count
+            for state in ['idle', 'busy', 'suspended']:
+                state_key = '%s_workers' % state
+                if state_key not in queues[queue.name]:
+                    queues[queue.name][state_key] = 0
+            state_key = '%s_workers' % worker.state
+            if state_key not in queues[queue.name]:
+                queues[queue.name][state_key] = 0
+            queues[queue.name][state_key] += 1
     all = _all_queues(rq)
     for a in all:
         if a.name not in queues:
